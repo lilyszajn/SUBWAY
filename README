@@ -1,0 +1,8 @@
+First install OpenNINITE
+	Unzip the file
+	In Terminal, type cd and drag the unzipped file into Terminal. Hit return.
+	Type sudo ./install.sh to run the installer
+
+Second install SimpleOpenNI by unzipping it and copying it into your libraries folder in Processing. Restart Processing.
+
+*This program is using a second USB web cam for the RGB image. Make sure you have a second camera plugged in.
