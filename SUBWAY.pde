@@ -1,8 +1,7 @@
-//add sandwich photos as array
-//add external camera
-
-// Simple sketch to demonstrate uploading directly from a Processing sketch to Flickr.
-// Uses a camera as a data source, uploads a frame every time you click the mouse.
+/*Using background subtraction to display a user in front of a backdrop with a photo of a sandwich in between their hands
+that changes size based on hand location. A photo is taken and printed upon button press/key press and printed using auto-printer.rb
+script using a Fuji Film ASK 2500 dye-sub printer. Photos can also be uploaded to Flickr on key press using these instructions
+http://frontiernerds.com/upload-to-flickr-from-processing*/
 
 import processing.video.*;
 import javax.imageio.*;
