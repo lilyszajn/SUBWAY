@@ -1,14 +1,13 @@
-//add sandwich photos as array
-//add external camera
-
-// Simple sketch to demonstrate uploading directly from a Processing sketch to Flickr.
-// Uses a camera as a data source, uploads a frame every time you click the mouse.
+/*Using background subtraction to display a user in front of a backdrop with a photo of a sandwich in between their hands
+that changes size based on hand location. A photo is taken and printed upon button press/key press and printed using auto-printer.rb
+script using a Fuji Film ASK 2500 dye-sub printer. Photos can also be uploaded to Flickr on key press using these instructions
+http://frontiernerds.com/upload-to-flickr-from-processing*/
 
 import processing.video.*;
 import javax.imageio.*;
 import java.awt.image.*;
-//import com.aetrion.flickr.*;
-import postdata.*;
+//import com.aetrion.flickr.*; //for posting to flickr
+//import postdata.*; //for posting to cakemix db
 import processing.serial.*;
 
 import SimpleOpenNI.*;
@@ -17,25 +16,24 @@ SimpleOpenNI kinect;
 PVector prevRightHandLocation;
 PVector prevLeftHandLocation;
 
-//int[] userMap;
+//int[] userMap; //background subtraction for kinect
 
 //background subtraction stuff
 //int numPixels;
 //int[] backgroundPixels;
-Capture video;
-int[] userMap;
-float threshold = 60;
+Capture video; //rgb for background subtraction
+float threshold = 60; //threshold for background subtraction
 
-PImage backgroundImage; //sandwich image
-PImage backdropImage; //background image
-PImage[] images = new PImage[2];
+PImage backgroundImage; //RGB image
+PImage backdropImage; //background image (jpg)
+PImage[] images = new PImage[2];//array for sandwiches
 
 PFont inches;
 
-Serial myPort;
-int inByte = 0;
+Serial myPort; //set up the incoming serial data from the button trigger (arduino)
+int inByte = 0; //set inbyte to 0
 
-boolean autoCalib=true;
+//boolean autoCalib=true; //to be used for non-calibration use
 
 void setup() {
   kinect = new SimpleOpenNI(this);
@@ -58,8 +56,6 @@ void setup() {
 
   //load the background image
   backdropImage = loadImage("TECHUP.jpg");
-
-  //sandwiches = new ArrayList(); //create an empty arraylist
 
   println(Serial.list());
   myPort = new Serial(this, Serial.list()[0], 9600);
@@ -159,9 +155,10 @@ void draw() {
       PVector leftHand = new PVector();
       //PVector head = new PVector();
       // put the position of the left hand into that vector
-      kinect.getJointPositionSkeleton(userId, SimpleOpenNI.SKEL_LEFT_HAND, rightHand);
+      float confidence = kinect.getJointPositionSkeleton(userId, SimpleOpenNI.SKEL_LEFT_HAND, rightHand);
       kinect.getJointPositionSkeleton(userId, SimpleOpenNI.SKEL_RIGHT_HAND, leftHand);
-
+      //set the right hand as confidence, so if the user is lost, it looks for a new one right away
+      if (confidence > 0.5) {
       // convert the detected hand position
       // to "projective" coordinates
       // that will match the depth image
@@ -174,24 +171,23 @@ void draw() {
       float subwaySizeLeft = convertedLeftHand.dist(convertedRightHand);
       float inches = subwaySizeLeft / 25.4;
       //make an array of the sandwich images
-      // PImage[] images = new PImage[2];
       for ( int i = 0; i< images.length; i++ )
       {
         images[i] = loadImage( i + ".png" ); //make sure images 0.png - 2.png exist
         smooth();
         image(images[i], convertedRightHand.x, convertedRightHand.y, subwaySizeLeft, 100 );   // make sure images "0.jpg" to "11.jpg" exist
-        //    image(images[(int)random(3)], convertedRightHand.x, convertedRightHand.y, subwaySizeLeft, 100);
       }
-
+      //display inches 
       fill(250, 250, 210);
       scale(1.5);
       if (inches > 0) {
         text(inches + " Inches", 150, 250);
         println(inches);
       }
-      //sandwich.resize(convertedLeftHand.x, convertedRightHand.y);
+      //reset the hand positions
       prevRightHandLocation = convertedRightHand;
       prevLeftHandLocation = convertedLeftHand;
+      }//confidence level
     }//user list
   }//tracking loop
 }//draw loop
@@ -199,6 +195,8 @@ void draw() {
 void serialEvent (Serial myPort) {
   int inByte = myPort.read();
   if (inByte == '1') {
+    //reset inbyte to 0
+    inByte = 0;
     println(inByte);
     String incoming = myPort.readStringUntil('\n');
     saveFrame("Subway######.jpg");
@@ -210,10 +208,6 @@ void keyPressed() {
   if (key == ' ') {
     saveFrame("Subway###.jpg");
     println("picture saved!");
-
-    /*//track new user
-     userId = 0;
-     pictureTaken = false;*/
   }
 }
 void mousePressed() {
@@ -248,7 +242,7 @@ void onStartPose(String pose, int userId) {
 }
 
 
-/*// user-tracking callbacks!
+/*// user-tracking callbacks without calibration!
  void onNewUser(int userId)
  {
  println("onNewUser - userId: " + userId);
